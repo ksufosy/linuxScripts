@@ -1,0 +1,39 @@
+1. unmount the drive.
+  umount /mount/point
+
+2. Run LUKS cryptsetup
+  sudo cryptsetup -y -v luksFormat /dev/sd?
+
+3. Open the drive
+  sudo cryptsetup luksOpen /dev/sd?X sd?X_crypt
+
+4. Format the drive.
+  sudo mkfs.ext4 /dev/mapper/sd?X_crypt
+
+5. Create a mount point.
+  sudo mkdir -p /some/folder
+
+6. Mount the drive.
+  sudo mount /dev/sd?X_crypt /mount/point
+
+The following setups are for auto-mounting of the drive.
+1. Create the keyfile
+  sudo dd if=/dev/urandom of=/path/to/key/.keyfile bs=1024 count=4
+
+2. Change the permissions to 0400
+  sudo chmod 0400 /path/to/key/.keyfile
+
+3. Add the key to luks
+  sudo cryptsetup luksAddKey /dev/sd?X /path/to/key/.keyfile
+
+4. Find the UUID of the drive. The ID needed is /dev/??? (not /dev/mapper/???)
+  sudo blkid
+
+5. Edit the /etc/crypttab file
+  sd?X_crypt UUID=<device UUID> /root/.keyfile luks,discard	# (New encrypted partition with keyfile that was generated)
+
+6. Edit the /etc/fstab file
+  /dev/mapper/sd?X_crypt  /<mount-point>   ext4    defaults        0       2
+
+7. Change the ownership of the drive if needed.
+  sudo chown <user>:<user> /<mount_point> -R
